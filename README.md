@@ -1,2 +1,2 @@
-# DL-Backprop
+# DL-NeuralNetwork
 Backpropagation from scratch
