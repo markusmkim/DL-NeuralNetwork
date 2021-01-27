@@ -1,5 +1,5 @@
 import numpy as np
-
+import random
 
 def samplemat(dims):
     """Make a matrix with all zeros and increasing elements on the diagonal"""
@@ -60,14 +60,14 @@ class ImageGenerator:
 
 
     def draw_cross(self):
+        print('Generating cross')
         image = np.zeros((self.size, self.size))
-        middle_point = self.size / 2
-        cross_pixel_index = middle_point
-        cross_arm_len = max(middle_point - 2, 1)
+        obj_center, x_radius, y_radius = self.generate_object_position(self.centered)
+        print(obj_center, x_radius, y_radius)
         for row in range(self.size):
             for column in range(self.size):
-                if (row == cross_pixel_index and abs(middle_point - column) <= cross_arm_len) \
-                        or (column == self.size - cross_pixel_index and abs(middle_point - row) <= cross_arm_len):
+                if (row == obj_center[1] and abs(obj_center[0] - column) <= x_radius) \
+                        or (column == obj_center[0] and abs(obj_center[1] - row) <= y_radius):
                     image[row][column] = 1
 
         return image
@@ -76,6 +76,24 @@ class ImageGenerator:
     def draw_rectangle(self):
         image = np.zeros((self.size, self.size))
         return 0
+
+
+    def generate_object_position(self, centered):
+        image_center = self.size // 2
+
+        # either center objects
+        if centered:
+            obj_center_x_co, obj_center_y_co = image_center, image_center
+
+        # or generate random position
+        else:
+            obj_center_x_co = image_center + random.randint(- (image_center // 2), image_center // 2)
+            obj_center_y_co = image_center + random.randint(- (image_center // 2), image_center // 2)
+
+        x_radius = random.randint(image_center // 4, image_center - abs(image_center - obj_center_x_co) - 1)
+        y_radius = random.randint(image_center // 4, image_center - abs(image_center - obj_center_y_co) - 1)
+
+        return (obj_center_x_co, obj_center_y_co), x_radius, y_radius
 
 
 

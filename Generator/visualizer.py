@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from Generator.generator import ImageGenerator
 import numpy as np
+from time import sleep
+
 
 colors = ListedColormap(['whitesmoke', 'darkolivegreen'])
 
@@ -12,9 +14,12 @@ def visualize_image(matrix):
     plt.show()
 
 
-g = ImageGenerator(10)
-zeros = np.zeros((10, 10))
-image = g.draw_cross()
+g = ImageGenerator(size=10, centered=False)
 
-print(image)
-visualize_image(image)
+
+for i in range(25):
+    image = g.draw_cross()
+
+    visualize_image(image)
+
+    sleep(0.2)
