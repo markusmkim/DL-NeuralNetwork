@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class HiddenLayer:
+class DenseLayer:
     def __init__(self, size, prev_layer, activation=None, learning_rate=0.1):
         self.size = size
         self.prev_layer = prev_layer

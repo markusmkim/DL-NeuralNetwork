@@ -4,7 +4,7 @@ import math
 
 
 class ImageGenerator:
-    def __init__(self, size, centered, noise_rate):
+    def __init__(self, size, centered=False, noise_rate=0.1):
         self.size = size
         self.centered = centered
         self.noise_rate = noise_rate
@@ -13,31 +13,32 @@ class ImageGenerator:
         self.next_image_type = 0
 
 
-    def generate_image_sets(self, number_of_images, share_train=0.7, share_validate=0.2):
+    def generate_image_sets(self, number_of_images, share_train=0.7, share_validate=0.2, flatten=False):
         images = []
         for i in range(number_of_images):
-            image = self.generate_image()
-            images.append(image)
+            image = self.generate_image(flatten)
+            target = one_hot_encoder(self.next_image_type)
+            images.append((image, target))
             self.next_image_type = (self.next_image_type + 1) % 4
 
         # split data into test, validate and test set
         return split_data_set(images, share_train, share_validate)
 
 
-    def generate_image(self):
+    def generate_image(self, flatten):
         if self.next_image_type == 0:
-            return self.draw_horizontal_bars()
+            return self.draw_horizontal_bars(flatten)
 
         if self.next_image_type == 1:
-            return self.draw_vertical_bars()
+            return self.draw_vertical_bars(flatten)
 
         if self.next_image_type == 2:
-            return self.draw_cross()
+            return self.draw_cross(flatten)
 
-        return self.draw_rectangle()
+        return self.draw_rectangle(flatten)
 
 
-    def draw_horizontal_bars(self):
+    def draw_horizontal_bars(self, flatten):
         image = np.zeros((self.size, self.size))
         obj_center, x_radius, y_radius = self.generate_object_position(self.centered)
         for row in range(0, self.size, 2):
@@ -51,15 +52,15 @@ class ImageGenerator:
                     # switch from 0 to 1 or 1 to 0
                     image[row][col] = (image[row][col] + 1) % 2
 
-        return image
+        return np.ravel(image) if flatten else image
 
 
-    def draw_vertical_bars(self):
-        image = self.draw_horizontal_bars()
-        return np.transpose(image)
+    def draw_vertical_bars(self, flatten):
+        image = self.draw_horizontal_bars(False)
+        return np.ravel(np.transpose(image)) if flatten else np.transpose(image)
 
 
-    def draw_cross(self):
+    def draw_cross(self, flatten):
         image = np.zeros((self.size, self.size))
         obj_center, x_radius, y_radius = self.generate_object_position(self.centered)
         for row in range(self.size):
@@ -73,10 +74,10 @@ class ImageGenerator:
                     # switch from 0 to 1 or 1 to 0
                     image[row][col] = (image[row][col] + 1) % 2
 
-        return image
+        return np.ravel(image) if flatten else image
 
 
-    def draw_rectangle(self):
+    def draw_rectangle(self, flatten):
         image = np.zeros((self.size, self.size))
         obj_center, x_radius, y_radius = self.generate_object_position(self.centered)
         for row in range(self.size):
@@ -90,7 +91,7 @@ class ImageGenerator:
                     # switch from 0 to 1 or 1 to 0
                     image[row][col] = (image[row][col] + 1) % 2
 
-        return image
+        return np.ravel(image) if flatten else image
 
 
     def generate_object_position(self, centered):
@@ -118,6 +119,13 @@ def split_data_set(data, share_train, share_validate):
     val = data[train_size: train_size + val_size]
     test = data[train_size + val_size:]
     return train, val, test
+
+
+def one_hot_encoder(target):
+    encoded_target = np.zeros(4)
+    # target is index
+    encoded_target[target] = 1
+    return encoded_target
 
 
 

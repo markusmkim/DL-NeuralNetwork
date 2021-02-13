@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+##### OLD #####
 
 def sigmoid(tensor):
     return tensor * 2
