@@ -10,13 +10,6 @@ from network.loss.mse import MSE
 from network.loss.crossentropy import CrossEntropy
 
 
-def batches(data, batch_size):
-    if not batch_size:
-        return None
-    number_of_batches = math.ceil(len(data) / batch_size)
-    return np.array_split(data, number_of_batches)
-
-
 class Network:
     def __init__(self, loss, layers_config, wreg, wrt):
         self.loss = get_loss(loss)
@@ -68,15 +61,15 @@ class Network:
         return layers
 
 
-    def fit(self, train_set, train_targets, val_set, val_targets, batch_size=32, epochs=10):
-        return self.run(True, train_set, train_targets, val_set, val_targets, batch_size, epochs)
+    def fit(self, train_set, train_targets, val_set, val_targets, batch_size=32, epochs=10, verbose=False):
+        return self.run(True, train_set, train_targets, val_set, val_targets, batch_size, epochs, verbose)
 
 
     def predict(self, data_set, target_set):
-        return self.run(False, data_set, target_set, None, None, None, 1)
+        return self.run(False, data_set, target_set, None, None, None, 1, False)
 
 
-    def run(self, train, data_set, target_set, val_set, val_targets, batch_size, epochs):
+    def run(self, train, data_set, target_set, val_set, val_targets, batch_size, epochs, verbose):
         loss_history_train = []
         loss_history_val = [] if train else None
         for epoch in range(epochs):
@@ -89,20 +82,24 @@ class Network:
                 # Propagate values through network to produce output
                 inputs = data_batches[i] if batch_size else data_set  # data batch i
                 targets = targets_batches[i] if batch_size else target_set  # target batch i
+                network_inputs = inputs  # save inputs for printing
                 for layer in self.network:
                     inputs = layer.forward_pass(inputs)
 
                 # Evaluate performance
                 outputs = inputs
-                loss, batch_loss_average = self.loss.error(outputs, targets)
-                print('\nOutputs')
-                print(outputs)
-                #print('Loss: ', loss)
-                print('Targets')
-                print(targets)
-                print('Batch average loss')
-                print(batch_loss_average)
-                loss_history_train.append(batch_loss_average)
+                loss = self.loss.error(outputs, targets)
+                loss_history_train.append(loss)
+
+                if verbose:
+                    print('\nInputs')
+                    print(network_inputs)
+                    print('\nOutputs')
+                    print(outputs)
+                    print('\nTargets')
+                    print(targets)
+                    print('\nLoss: ', loss)
+                    print('='*100)
 
                 if train:
                     # Backpropagate and update weights
@@ -112,7 +109,6 @@ class Network:
 
             # predict validation data
             if train and val_set is not None and val_targets is not None:
-                print('Jippi')
                 # Propagate validation values through network to produce output
                 val_inputs = val_set
                 val_targets = val_targets
@@ -121,12 +117,17 @@ class Network:
 
                 # Evaluate performance
                 val_outputs = val_inputs
-                _, val_batch_loss_average = self.loss.error(val_outputs, val_targets)
-                loss_history_val.append(val_batch_loss_average)
+                val_loss = self.loss.error(val_outputs, val_targets)
+                loss_history_val.append(val_loss)
 
-            if train:
-                print('Epoch', epoch + 1, 'done')
         return loss_history_train, loss_history_val
+
+
+def batches(data, batch_size):
+    if not batch_size:
+        return None
+    number_of_batches = math.ceil(len(data) / batch_size)
+    return np.array_split(data, number_of_batches)
 
 
 def get_loss(loss):

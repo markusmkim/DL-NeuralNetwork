@@ -6,7 +6,7 @@ class CrossEntropy:
     def error(outputs, targets):
         batch_size = len(outputs)
         cross_entropies = - np.sum(targets * np.log(outputs), axis=1)
-        return cross_entropies.reshape(batch_size, 1), cross_entropies.sum() / batch_size
+        return cross_entropies.sum() / batch_size
 
 
     @staticmethod

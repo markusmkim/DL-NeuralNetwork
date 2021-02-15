@@ -11,4 +11,3 @@ def visualize_image(matrix):
     # plt.savefig(f'fig-{index}.png', bbox_inches='tight')
     plt.show()
 
-

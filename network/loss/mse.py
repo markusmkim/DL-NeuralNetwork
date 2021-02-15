@@ -10,7 +10,7 @@ class MSE:
         frac = 1 / number_of_output_nodes
         squared_errors = (outputs - targets)**2
         mses = frac * (squared_errors.sum(axis=1))
-        return mses.reshape(batch_size, 1), mses.sum() / batch_size
+        return mses.sum() / batch_size
 
 
     @staticmethod
