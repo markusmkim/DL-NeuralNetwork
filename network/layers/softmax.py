@@ -8,11 +8,13 @@ class SoftmaxOutputLayer:
 
 
     def forward_pass(self, input_batch):
-        exponentials = np.exp(input_batch)  # dimension = (batch size, number of output nodes)
+        ### input batch her kan ha altfor store verdier, få på noe regularisering
+
+        #exponentials = np.where(input_batch < 500, np.exp(input_batch), 3*(10**43))  # dimension = (batch size, number of output nodes)
+        exponentials = np.exp(input_batch)
         sum_exponentials = exponentials.sum(axis=1)  # row vector of length = batch size
         sum_exponentials_column_vector = sum_exponentials[:, None]  # reshape to column vector w/dim = (batch size, 1)
         output_batch = exponentials / sum_exponentials_column_vector
-
         self.present_outputs = output_batch
         return output_batch
 

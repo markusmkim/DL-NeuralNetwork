@@ -13,7 +13,7 @@ class ImageGenerator:
         self.next_image_type = 0
 
 
-    def generate_image_sets(self, number_of_images, share_train=0.7, share_validate=0.2, flatten=False):
+    def generate_image_sets(self, number_of_images, share_train=0.7, share_validate=0.1, flatten=False):
         images = []
         for i in range(number_of_images):
             image = self.generate_image(flatten)

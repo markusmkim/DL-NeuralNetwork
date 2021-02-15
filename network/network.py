@@ -4,6 +4,8 @@ from network.layers.dense import DenseLayer
 from network.layers.input import InputLayer
 from network.layers.softmax import SoftmaxOutputLayer
 from network.activation.sigmoid import Sigmoid
+from network.activation.relu import Relu
+from network.activation.tanh import TanH
 from network.loss.mse import MSE
 from network.loss.crossentropy import CrossEntropy
 
@@ -16,9 +18,12 @@ def batches(data, batch_size):
 
 
 class Network:
-    def __init__(self, loss, layers_config):
+    def __init__(self, loss, layers_config, wreg, wrt):
         self.loss = get_loss(loss)
+        self.wreg = wreg
+        self.wrt = wrt
         self.network = self.build_network(layers_config)
+
 
     def build_network(self, layers_config):
         layers = []
@@ -33,7 +38,9 @@ class Network:
             layer = DenseLayer(layer_config['size'],
                                prev_layer,
                                activation=get_activation(layer_config['activation']),
-                               learning_rate=layer_config['learning_rate'])
+                               learning_rate=layer_config['learning_rate'],
+                               wreg=self.wreg,
+                               wrt=self.wrt if self.wrt is not None else None)
             layers.append(layer)
             prev_layer = layer
 
@@ -42,7 +49,9 @@ class Network:
         if output_config['activation'] == 'softmax':
             linear_layer = DenseLayer(output_config['size'],
                                       prev_layer,
-                                      learning_rate=output_config['learning_rate'])
+                                      learning_rate=output_config['learning_rate'],
+                                      wreg=self.wreg,
+                                      wrt=self.wrt if self.wrt is not None else None)
             softmax_layer = SoftmaxOutputLayer(output_config['size'])
             layers.append(linear_layer)
             layers.append(softmax_layer)
@@ -51,7 +60,9 @@ class Network:
             output_layer = DenseLayer(output_config['size'],
                                       prev_layer,
                                       activation=get_activation(output_config['activation']),
-                                      learning_rate=output_config['learning_rate'])
+                                      learning_rate=output_config['learning_rate'],
+                                      wreg=self.wreg,
+                                      wrt=self.wrt if self.wrt is not None else None)
             layers.append(output_layer)
 
         return layers
@@ -75,7 +86,6 @@ class Network:
 
             # for each batch
             for i in range(len(data_batches) if batch_size else 1):
-
                 # Propagate values through network to produce output
                 inputs = data_batches[i] if batch_size else data_set  # data batch i
                 targets = targets_batches[i] if batch_size else target_set  # target batch i
@@ -133,9 +143,9 @@ def get_activation(act):
     if act == 'sigmoid':
         return Sigmoid
     if act == 'relu':
-        return None
+        return Relu
     if act == 'tanh':
-        return None
+        return TanH
     # else linear
     return None
 
