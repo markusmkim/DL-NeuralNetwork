@@ -13,13 +13,13 @@ class DenseLayer:
         self.weights = self.initialize_weights()
         self.biases = self.initialize_biases()
 
-
+    # initialize weights from a uniform distribution between -0.1 and 0.1
     def initialize_weights(self):
-        return (np.random.rand(self.prev_layer.size, self.size) / 5) - 0.05
+        return (np.random.rand(self.prev_layer.size, self.size) / 5) - 0.1
 
-
+    # initialize biases from a uniform distribution between -0.1 and 0.1
     def initialize_biases(self):
-        return (np.random.rand(1, self.size) / 5) - 0.05
+        return (np.random.rand(1, self.size) / 5) - 0.1
 
 
     def forward_pass(self, input_batch):
@@ -32,11 +32,13 @@ class DenseLayer:
 
 
     def backward_pass(self, jacobian_L_Z):
+        # calculate the jacobian of Z with regard to the input sum
         if self.activation:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.activation.derivative(self.present_outputs)
         else:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.jacobian_Z_sum(self.present_outputs)
 
+        # calculate the gradients of the loss with regards to weights and biases
         y_outputs = self.prev_layer.present_outputs
         jacobian_Z_W = self.jacobian_Z_W(y_outputs, jacobian_Z_sum_diag_flattened)
         jacobian_Z_B = self.jacobian_Z_B(np.full((len(y_outputs), 1), 1), jacobian_Z_sum_diag_flattened)
@@ -44,12 +46,15 @@ class DenseLayer:
         jacobian_L_W = self.jacobian_L_W(jacobian_L_Z, jacobian_Z_W)
         jacobian_L_B = self.jacobian_L_B(jacobian_L_Z, jacobian_Z_B)
 
+        # update weights and biases
         self.update_weights(jacobian_L_W)
         self.update_bias(jacobian_L_B)
 
+        # calculate the gradients of the loss with regards to previous layer Y outputs and pass backwards
         jacobian_Z_Y = self.jacobian_Z_Y(jacobian_Z_sum, self.weights)
         jacobian_L_Y = self.jacobian_L_Y(jacobian_L_Z, jacobian_Z_Y)
         return jacobian_L_Y
+
 
     def jacobian_Z_Y(self, jacobian_Z_sum, weights_z):
         return np.dot(jacobian_Z_sum, np.transpose(weights_z))
