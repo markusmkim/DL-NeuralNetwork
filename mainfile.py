@@ -7,11 +7,9 @@ from network.loss.visualizer import plot_loss_per_minibatch
 
 
 # --- READ CONFIGURATIONS --- #
-path_config_2_hidden = 'config.ini'
-path_config_no_hidden = 'config_no_hidden.ini'
-path_config_5_hidden = 'config_5_hidden.ini'
-path_config_custom = 'config_custom.ini'
-config_reader = ConfigReader(filepath=path_config_2_hidden)
+path_config_demo = 'config/config_demo.ini'
+path_config_custom = 'config/config_custom.ini'
+config_reader = ConfigReader(filepath=path_config_demo)
 config = config_reader.get_data()
 print('\nConfiguration summary:\n----------------------')
 print_config(config)
