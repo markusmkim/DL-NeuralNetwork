@@ -1,5 +1,3 @@
-import numpy as np
-import math
 from network.layers.dense import DenseLayer
 from network.layers.input import InputLayer
 from network.layers.softmax import SoftmaxOutputLayer
@@ -8,6 +6,9 @@ from network.activation.relu import Relu
 from network.activation.tanh import TanH
 from network.loss.mse import MSE
 from network.loss.crossentropy import CrossEntropy
+from network.progress import Progress
+from network.utils import batches
+from network.utils import print_batch_values
 
 
 class Network:
@@ -70,6 +71,7 @@ class Network:
 
 
     def run(self, train, data_set, target_set, val_set, val_targets, batch_size, epochs, verbose):
+        progress = Progress(epochs) if verbose == 1 else None
         loss_history_train = []
         loss_history_val = [] if train else None
         for epoch in range(epochs):
@@ -91,17 +93,13 @@ class Network:
                 loss = self.loss.error(outputs, targets)
                 loss_history_train.append(loss)
 
-                if verbose:
-                    print('\nInputs')
-                    print(network_inputs)
-                    print('\nOutputs')
-                    print(outputs)
-                    print('\nTargets')
-                    print(targets)
-                    print('\nLoss: ', loss)
-                    print('='*100)
-
                 if train:
+                    if verbose == 1:
+                        progress.batch_train_loss(loss)
+
+                    if verbose == 2:
+                        print_batch_values(network_inputs, outputs, targets, loss)
+
                     # Backpropagate and update weights
                     J_L_Z = self.loss.derivative(outputs, targets)
                     for layer in reversed(self.network):
@@ -120,14 +118,11 @@ class Network:
                 val_loss = self.loss.error(val_outputs, val_targets)
                 loss_history_val.append(val_loss)
 
+                if verbose == 1:
+                    progress.val_loss(val_loss)
+                    progress.print_epoch(epoch + 1)
+
         return loss_history_train, loss_history_val
-
-
-def batches(data, batch_size):
-    if not batch_size:
-        return None
-    number_of_batches = math.ceil(len(data) / batch_size)
-    return np.array_split(data, number_of_batches)
 
 
 def get_loss(loss):

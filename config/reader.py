@@ -11,7 +11,7 @@ class ConfigReader:
             'loss': self.config['GLOBALS']['loss'],
             'batch_size': int(self.config['GLOBALS']['batch_size']),
             'epochs': int(self.config['GLOBALS']['epochs']),
-            'verbose': self.config['GLOBALS']['verbose'] == 'true',
+            'verbose': int(self.config['GLOBALS']['verbose']),
             'wreg': float(self.config['GLOBALS']['wreg']),
             'wrt': self.config['GLOBALS']['wrt'],
             'image_size': int(self.config['DATA']['image_size']),

@@ -8,10 +8,13 @@ class SoftmaxOutputLayer:
 
 
     def forward_pass(self, input_batch):
-        ### input batch her kan ha altfor store verdier, få på noe regularisering
+        # make sure exponentials do not explode (numpy cannot handle too big numbers)
+        max_values = np.amax(input_batch, axis=1)
+        max_values_column_vector = max_values[:, None]
+        adjusted_inputs = np.where(max_values_column_vector < 700, input_batch, input_batch / max_values_column_vector)
 
-        #exponentials = np.where(input_batch < 500, np.exp(input_batch), 3*(10**43))  # dimension = (batch size, number of output nodes)
-        exponentials = np.exp(input_batch)
+        # then apply softmax
+        exponentials = np.exp(adjusted_inputs)
         sum_exponentials = exponentials.sum(axis=1)  # row vector of length = batch size
         sum_exponentials_column_vector = sum_exponentials[:, None]  # reshape to column vector w/dim = (batch size, 1)
         output_batch = exponentials / sum_exponentials_column_vector
