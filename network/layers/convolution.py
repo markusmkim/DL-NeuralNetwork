@@ -1,4 +1,5 @@
 import numpy as np
+from network.layers.helpers.generators import generate_maps
 
 
 class ConvolutionalLayer:
@@ -51,38 +52,25 @@ class ConvolutionalLayer:
         return output_batch
 
 
-    def apply_kernel(self, input_map, kernel, stride=1, mode='same'):
-        # assume kernel dimensions are odd numbers
-        output_map = np.zeros(input_map.shape)
-        # assume kernel dimensions x = y, else need x_padding and y_padding
-        padding_size = len(kernel) // 2
-        padded_map = self.apply_padding(input_map, padding_size)
+    def apply_kernel(self, input_map, kernel, strides=1, mode='same'):
+        output_map, padded_map = generate_maps(input_map, kernel, 1, 'full')
+        # print(padded_map)
+        # print(output_map)
+
         for row in range(output_map.shape[0]):
             for col in range(output_map.shape[1]):
                 weighted_sum = 0
-                for kernel_row_index in range(-padding_size, padding_size + 1):
-                    for kernel_col_index in range(-padding_size, padding_size + 1):
-                        weight = kernel[padding_size + kernel_row_index][padding_size + kernel_col_index]
-                        map_entry = padded_map[row +
-                                               padding_size +
-                                               kernel_row_index
-                                               ][col +
-                                                 padding_size +
-                                                 kernel_col_index
-                                                 ]
+                # Y(k) = sum (-d, d) { x(k + d) w(d) }
+                for kernel_row_index in range(kernel.shape[0]):
+                    for kernel_col_index in range(kernel.shape[1]):
+                        weight = kernel[kernel_row_index][kernel_col_index]
+                        map_entry = padded_map[row + kernel_row_index][col + kernel_col_index]
 
                         weighted_sum += weight * map_entry
 
                 output_map[row][col] = weighted_sum
 
         return output_map
-
-
-    def apply_padding(self, input_map, padding_size):
-        return np.pad(input_map,
-                      padding_size,
-                      'constant',
-                      constant_values=0)
 
 
     def backward_pass(self, jacobian_L_Z):
@@ -105,6 +93,11 @@ class ConvolutionalLayer:
         jacobian_Z_Y = self.jacobian_Z_Y(jacobian_Z_sum, self.weights)
         jacobian_L_Y = self.jacobian_L_Y(jacobian_L_Z, jacobian_Z_Y)
         return jacobian_L_Y
+
+
+
+
+
 
 
     def jacobian_Z_Y(self, jacobian_Z_sum, weights_z):
@@ -157,3 +150,5 @@ class ConvolutionalLayer:
             identity_matrices.append(np.identity(number_of_outputs))
 
         return flat_identity_matrices, np.array(identity_matrices)
+
+
