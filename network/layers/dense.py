@@ -3,6 +3,7 @@ import numpy as np
 
 class DenseLayer:
     def __init__(self, size, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
+        self.type = 'dense'
         self.size = size
         self.prev_layer = prev_layer
         self.activation = activation
@@ -10,12 +11,12 @@ class DenseLayer:
         self.wreg = wreg
         self.wrt = wrt
         self.present_outputs = None
-        self.weights = self.initialize_weights()
+        self.weights = self.initialize_weights(prev_layer.size) if prev_layer.type != 'conv' else None
         self.biases = self.initialize_biases()
 
     # initialize weights from a uniform distribution between -0.1 and 0.1
-    def initialize_weights(self):
-        return (np.random.rand(self.prev_layer.size, self.size) / 5) - 0.1
+    def initialize_weights(self, prev_size):
+        return (np.random.rand(prev_size, self.size) / 5) - 0.1
 
     # initialize biases from a uniform distribution between -0.1 and 0.1
     def initialize_biases(self):
@@ -23,6 +24,11 @@ class DenseLayer:
 
 
     def forward_pass(self, input_batch):
+        if self.prev_layer.type == 'conv' and self.weights is None:
+            # flat input
+            size = 0
+            self.initialize_weights(0)
+
         # apply activation function if supplied, else just pass the incoming values on
         weighted_sum = np.dot(input_batch, self.weights) + self.biases
         output_batch = self.activation.apply(weighted_sum) if self.activation else weighted_sum

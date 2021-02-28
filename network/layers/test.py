@@ -1,7 +1,9 @@
 from network.layers.convolution import ConvolutionalLayer
 import numpy as np
+from network.activation.sigmoid import Sigmoid
 
-layer = ConvolutionalLayer((3, 3), 3, 1, 'same', 2, None)
+layer = ConvolutionalLayer((3, 3), 3, 1, 'same', 2, None, activation=Sigmoid)
+layer_2 = ConvolutionalLayer((3, 3), 5, 1, 'valid', 3, None, activation=Sigmoid)
 
 input_batch = np.array([
     [
@@ -38,4 +40,5 @@ input_batch = np.array([
     ]
 ])
 
-print(layer.forward_pass(input_batch).shape)
+a = layer.forward_pass(input_batch)
+layer.backward_pass(a)

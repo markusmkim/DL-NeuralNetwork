@@ -17,3 +17,8 @@ class Sigmoid:
             diagonal_derivatives = np.diag(derivatives)
             diagonals.append(diagonal_derivatives)
         return flat_derivatives, np.array(diagonals)
+
+
+    @staticmethod
+    def conv_derivative(node_outputs):
+        return node_outputs * (1 - node_outputs)
