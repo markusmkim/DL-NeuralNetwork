@@ -12,11 +12,13 @@ class Relu:
 
 
     @staticmethod
-    def derivative(node_outputs):
+    def derivative(node_outputs, only_same_shape=False):
         def derivative_func(a, b):
             return 1.0 if a > b else 0.0
         vectorizer = np.vectorize(derivative_func)
         flat_derivatives = vectorizer(node_outputs, 0)
+        if only_same_shape:
+            return flat_derivatives
         diagonals = []
         for output in node_outputs:
             derivatives = vectorizer(output, 0)

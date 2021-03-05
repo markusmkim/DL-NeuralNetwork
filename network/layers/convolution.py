@@ -143,7 +143,7 @@ class ConvolutionalLayer:
 
         # calculate the jacobian of Z with regard to the input sum
         if self.activation:
-            jacobian_Z_sum = self.activation.conv_derivative(self.present_outputs)
+            jacobian_Z_sum = self.activation.derivative(self.present_outputs, only_same_shape=True)
         else:
             jacobian_Z_sum = self.jacobian_Z_sum(self.present_outputs)
 
