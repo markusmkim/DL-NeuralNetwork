@@ -3,8 +3,11 @@ from network.layers.helpers.generators import generate_maps
 
 
 class ConvolutionalLayer:
-    def __init__(self, filter_shape, num_filters, stride, mode, prev_filters, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
+    def __init__(self, filter_shape, num_filters, stride, mode, prev_layer,
+                 flatten=False, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
         self.type = 'conv'
+        self.flatten = flatten
+
         self.filter_shape = filter_shape
         self.num_filters = num_filters
         self.stride = stride
@@ -15,10 +18,12 @@ class ConvolutionalLayer:
         self.learning_rate = learning_rate
         self.wreg = wreg
         self.wrt = wrt
+        self.present_inputs = None
         self.present_outputs = None
-        self.prev_filters = prev_filters  # this one needs to be derived from prev layer
+        self.prev_filters = prev_layer.num_filters  # this one needs to be derived from prev layer
         self.weights = self.initialize_weights()
-        self.weight_impacts = self.initialize_weight_impacts()
+        self.weight_impacts = None
+        self.input_impacts = None
 
     # initialize weights from a uniform distribution between -0.1 and 0.1
     def initialize_weights(self):
@@ -34,25 +39,32 @@ class ConvolutionalLayer:
                                self.filter_shape[1]) / 5) - 0.1
 
 
-    def initialize_weight_impacts(self):
+    def initialize_impacts(self, shape):
+        #print('ssss', self.num_filters, shape)
         impacts = {}
-        for output_map_index in range(self.weights.shape[0]):
-            for input_map_index in range(self.weights.shape[1]):
-                for weight_row in range(self.weights.shape[2]):
-                    for weight_col in range(self.weights.shape[3]):
-                        impacts[(output_map_index, input_map_index, weight_row, weight_col)] = {}
+        for index_in_batch in range(shape[0]):
+            impacts[index_in_batch] = {}
+            for i in range(shape[1]):
+                for ii in range(shape[2]):
+                    for iii in range(shape[3]):
+                        for iiii in range(shape[4]):
+                            impacts[index_in_batch][(i, ii, iii, iiii)] = {}
         return impacts
 
 
     def forward_pass(self, input_batch):
+        self.weight_impacts = self.initialize_impacts((input_batch.shape[0], ) + self.weights.shape)
+        self.input_impacts = self.initialize_impacts((input_batch.shape[0], ) + (self.num_filters, ) + input_batch.shape[1:])
+        self.present_inputs = input_batch
+        # print('Getting in', input_batch.shape)
         output_batch = []
-        for batch_case in input_batch:
+        for batch_case_index, batch_case in enumerate(input_batch):
             output_maps = []
             for weight_index in range(len(self.weights)):
                 input_maps_kernalized = []
                 for input_map_index in range(len(batch_case)):
                     input_map = batch_case[input_map_index]
-                    input_map_kernalized = self.apply_kernel(input_map, weight_index, input_map_index)
+                    input_map_kernalized = self.apply_kernel(batch_case_index, input_map, weight_index, input_map_index)
                     input_maps_kernalized.append(input_map_kernalized)
 
                 output_map = np.sum(input_maps_kernalized, axis=0)
@@ -65,37 +77,70 @@ class ConvolutionalLayer:
 
         output_batch = np.array(output_batch)
         self.present_outputs = output_batch
+
+        if self.flatten:
+            # assume 2d image dimensions are equal (image-ratio = 1:1)
+            output_batch = output_batch.reshape((output_batch.shape[0],
+                                                 output_batch.shape[1] * output_batch.shape[2]**2))
+
         return output_batch
 
 
-    def apply_kernel(self, input_map, weight_index, input_map_index):
+    def apply_kernel(self, batch_case_index, input_map, weight_index, input_map_index):
         kernel = self.weights[weight_index][input_map_index]
-        output_map, padded_map = generate_maps(input_map, kernel, self.stride, self.mode)
-
+        output_map, padded_map, start_pad_row, start_pad_col = generate_maps(input_map, kernel, self.stride, self.mode)
+        # counter = 0
+        input_map_row_A = -start_pad_row
+        pad_row_index = 0
         for row in range(output_map.shape[0]):
+            input_map_col_A = -start_pad_col
+            pad_col_index = 0
             for col in range(output_map.shape[1]):
                 weighted_sum = 0
                 # Y(k) = sum (-d, d) { x(k + d) w(d) }
+                # weights_affecting_input = []
                 for kernel_row_index in range(kernel.shape[0]):
                     for kernel_col_index in range(kernel.shape[1]):
+
                         weight = kernel[kernel_row_index][kernel_col_index]
-                        map_entry = padded_map[row + kernel_row_index][col + kernel_col_index]
+                        map_entry = padded_map[pad_row_index + kernel_row_index][pad_col_index + kernel_col_index]
                         weighted_sum += weight * map_entry
 
+                        # if map_entry != 0: DENNE er farlig
                         # for hver vekt, hvor mye påvirker vekten hver output
                         # weight_index = output_map_index
-                        output_map_impact_key = (weight_index, row, col)
+                        output_map_impact_key = (row, col)
                         weight_impact_key = (weight_index, input_map_index, kernel_row_index, kernel_col_index)
-                        self.weight_impacts[weight_impact_key][output_map_impact_key] = map_entry
+                        self.weight_impacts[batch_case_index][weight_impact_key][output_map_impact_key] = map_entry
                         # weight_impacts.append((output_map_impact_key, map_entry))
                         # self.weight_impacts[weight_impact_key] = weight_impacts
 
+                        input_map_row = input_map_row_A + kernel_row_index
+                        input_map_col = input_map_col_A + kernel_col_index
+                        # må vite index for input_map her
+                        # input_map_row = 0
+                        # input_map_col = 0
+                        if 0 <= input_map_row < input_map.shape[0] and 0 <= input_map_col < input_map.shape[1]:
+                            # counter += 1
+                            input_impact_key = (weight_index, input_map_index, input_map_row, input_map_col)
+                            self.input_impacts[batch_case_index][input_impact_key][output_map_impact_key] = weight
+
+
                 output_map[row][col] = weighted_sum
 
+                pad_col_index += self.stride
+                input_map_col_A += self.stride
+            pad_row_index += self.stride
+            input_map_row_A += self.stride
+        # print('counter: ', counter)
         return output_map
 
 
     def backward_pass(self, jacobian_L_Z):
+        if self.flatten:
+            # assume 2d image dimensions are equal (image-ratio = 1:1)
+            jacobian_L_Z = jacobian_L_Z.reshape(self.present_outputs.shape)
+
         # calculate the jacobian of Z with regard to the input sum
         if self.activation:
             jacobian_Z_sum = self.activation.conv_derivative(self.present_outputs)
@@ -111,19 +156,45 @@ class ConvolutionalLayer:
         # update weights
         self.update_weights(jacobian_L_W)
 
+        #self.initialize_weight_impacts()
+
         # calculate the gradients of the loss with regards to previous layer Y outputs and pass backwards
         # jacobian_Z_Y = self.jacobian_Z_Y(jacobian_Z_sum, self.weights)
         # jacobian_L_Y = self.jacobian_L_Y(jacobian_L_Z, jacobian_Z_Y)
-        # return jacobian_L_Y
+        jacobian_L_Y = self.jacobian_L_Y(jacobian_L_Z, jacobian_Z_sum)
+        return jacobian_L_Y
 
 
-    def jacobian_Z_Y(self, jacobian_Z_sum, weights_z):
-        return np.dot(jacobian_Z_sum, np.transpose(weights_z))
+    def jacobian_L_Y(self, jacobian_L_Z, jacobian_Z_sum):
+        # print('L-Z')
+        # print(jacobian_L_Z.shape)
+        # print('Z-sum')
+        # print(jacobian_Z_sum.shape)
+        gradients = []
+        # for every case in batch
+        for batch_case_index in range(len(jacobian_L_Z)):
+            gradients_batch_case = np.zeros(self.present_inputs.shape[1:])
+            for input_map_index in range(gradients_batch_case.shape[0]):
+                for row in range(gradients_batch_case.shape[1]):
+                    for col in range(gradients_batch_case.shape[2]):
+                        total_input_impact = 0
+                        for output_map_index in range(self.num_filters):
+                            input_impact_key = (output_map_index, input_map_index, row, col)
+                            output_map_keys = self.input_impacts[batch_case_index][input_impact_key].keys()
 
+                            for key in output_map_keys:
+                                impact = self.input_impacts[batch_case_index][input_impact_key][key] * (
+                                    jacobian_L_Z[batch_case_index][output_map_index][key[0]][key[1]]) * (
+                                             jacobian_Z_sum[batch_case_index][output_map_index][key[0]][key[1]])
+                                total_input_impact += impact
 
-    def jacobian_L_Y(self, jacobian_L_Z, jacobian_Z_Y):
-        # dot product elementwise in batch axis (i = batch axis)
-        return np.einsum('ij,ijk->ik', jacobian_L_Z, jacobian_Z_Y)
+                        gradients_batch_case[input_map_index][row][col] = total_input_impact
+
+            gradients.append(gradients_batch_case)
+
+        gradients = np.array(gradients)
+        # print('Passing back', gradients.shape)
+        return gradients
 
 
     def update_weights(self, jacobian_L_W):
@@ -138,37 +209,26 @@ class ConvolutionalLayer:
         self.weights = self.weights - (self.learning_rate * summed_gradients)
 
 
-    def regulate_gradients(self, gradients):
-        if self.wrt == 'L2':
-            return gradients + (self.wreg * self.weights)
-
-        if self.wrt == 'L1':
-            return gradients + (self.wreg + np.sign(self.weights))
-
-        # else do not regulate
-        return gradients
-
-
     def jacobian_L_W(self, jacobian_L_Z, jacobian_Z_sum):
-        print('L-Z')
-        print(jacobian_L_Z.shape)
-        print('Z-SUM')
-        print(jacobian_Z_sum.shape)
+        # print('L-Z')
+        # print(jacobian_L_Z.shape)
+        # print('Z-SUM')
+        # print(jacobian_Z_sum.shape)
         gradients = []
         # for every case in batch
-        for batch_case in range(len(jacobian_L_Z)):
+        for batch_case_index in range(len(jacobian_L_Z)):
             gradients_batch_case = np.zeros(self.weights.shape)
             for output_map_index in range(gradients_batch_case.shape[0]):
                 for input_map_index in range(gradients_batch_case.shape[1]):
                     for weight_row in range(gradients_batch_case.shape[2]):
                         for weight_col in range(gradients_batch_case.shape[3]):
                             weight_impact_key = (output_map_index, input_map_index, weight_row, weight_col)
-                            output_map_keys = self.weight_impacts[weight_impact_key].keys()
+                            output_map_keys = self.weight_impacts[batch_case_index][weight_impact_key].keys()
                             total_weight_impact = 0
                             for key in output_map_keys:
-                                impact = self.weight_impacts[weight_impact_key][key] * (
-                                    jacobian_L_Z[batch_case][key[0]][key[1]][key[2]]) * (
-                                    jacobian_Z_sum[batch_case][key[0]][key[1]][key[2]])
+                                impact = self.weight_impacts[batch_case_index][weight_impact_key][key] * (
+                                    jacobian_L_Z[batch_case_index][output_map_index][key[0]][key[1]]) * (
+                                    jacobian_Z_sum[batch_case_index][output_map_index][key[0]][key[1]])
                                 total_weight_impact += impact
 
                             gradients_batch_case[output_map_index][input_map_index][weight_row][weight_col] = \
@@ -182,5 +242,17 @@ class ConvolutionalLayer:
     # used if no activation function supplied (=linear activation), returns identity matrix + flattened identity matrix
     def jacobian_Z_sum(self, outputs):
         return np.ones(outputs.shape)
+
+
+    def regulate_gradients(self, gradients):
+        if self.wrt == 'L2':
+            return gradients + (self.wreg * self.weights)
+
+        if self.wrt == 'L1':
+            return gradients + (self.wreg + np.sign(self.weights))
+
+        # else do not regulate
+        return gradients
+
 
 

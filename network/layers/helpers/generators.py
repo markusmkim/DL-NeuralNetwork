@@ -31,7 +31,7 @@ def generate_maps(input_map, kernel, stride, mode):
         padding_size = ((pad_row, pad_row), (pad_col, pad_col))     # specify zero-padding dimensions
         padded_map = apply_padding(input_map, padding_size)         # pad input map
 
-        return np.zeros(input_map.shape), padded_map
+        return np.zeros(input_map.shape), padded_map, pad_row, pad_col
 
 
     if mode == 'full':
@@ -47,7 +47,7 @@ def generate_maps(input_map, kernel, stride, mode):
 
         output_map_shape = (steps_row, steps_col)  # output map shape given by steps
 
-        return np.zeros(output_map_shape), padded_map
+        return np.zeros(output_map_shape), padded_map, padding_size, padding_size
 
 
     if mode == 'valid':
@@ -67,7 +67,7 @@ def generate_maps(input_map, kernel, stride, mode):
         padding_size = ((0, pad_row_end), (0, pad_col_end))         # specify zero-padding dimensions
         padded_map = apply_padding(input_map, padding_size)         # pad input map
 
-        return np.zeros(output_map_shape), padded_map
+        return np.zeros(output_map_shape), padded_map, 0, 0
 
 
     print('Invalid mode')

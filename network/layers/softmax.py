@@ -3,6 +3,7 @@ import numpy as np
 
 class SoftmaxOutputLayer:
     def __init__(self, size):
+        self.type = 'softmax'
         self.size = size
         self.present_outputs = None
 
@@ -11,7 +12,7 @@ class SoftmaxOutputLayer:
         # make sure exponentials do not explode (numpy cannot handle too big numbers)
         max_values = np.amax(input_batch, axis=1)
         max_values_column_vector = max_values[:, None]
-        adjusted_inputs = np.where(max_values_column_vector < 700, input_batch, input_batch / max_values_column_vector)
+        adjusted_inputs = np.where(max_values_column_vector < 600, input_batch, input_batch / max_values_column_vector)
 
         # then apply softmax
         exponentials = np.exp(adjusted_inputs)

@@ -1,6 +1,9 @@
 from network.layers.dense import DenseLayer
+from network.layers.convolution import ConvolutionalLayer
 from network.layers.input import InputLayer
+from network.layers.input import ConvInputLayer
 from network.layers.softmax import SoftmaxOutputLayer
+from network.layers.helpers.visualizer import plot_kernel
 from network.activation.sigmoid import Sigmoid
 from network.activation.relu import Relu
 from network.activation.tanh import TanH
@@ -22,23 +25,48 @@ class Network:
     def build_network(self, layers_config):
         layers = []
 
-        # add input layer
-        input_layer = InputLayer(layers_config[0]['size'])
+        """ add input layer """
+        input_config = layers_config[0]
+        input_layer = ConvInputLayer(1) if input_config['type'] == 'conv' else InputLayer(input_config['size'])
+        # input_layer = ConvInputLayer(1)
         layers.append(input_layer)
 
-        # add hidden layers
+        # conv_layer = ConvolutionalLayer((3, 3), 3, 1, 'same', input_layer, activation=Sigmoid)
+        # layers.append(conv_layer)
+
+        # conv_layer_2 = ConvolutionalLayer((3, 3), 5, 1, 'valid', conv_layer, activation=Sigmoid, flatten=True)
+        # layers.append(conv_layer_2)
+
+        """ add hidden layers """
         prev_layer = input_layer
-        for layer_config in layers_config[1:-1]:
-            layer = DenseLayer(layer_config['size'],
-                               prev_layer,
-                               activation=get_activation(layer_config['activation']),
-                               learning_rate=layer_config['learning_rate'],
-                               wreg=self.wreg,
-                               wrt=self.wrt if self.wrt is not None else None)
+        # prev_layer = conv_layer_2
+        for i in range(1, len(layers_config) - 1):
+            layer_config = layers_config[i]
+
+            # if convolutional layer
+            if layer_config['type'] == 'conv':
+                is_next_layer_dense = layers_config[i + 1]['type'] == 'dense'
+                print(is_next_layer_dense)
+                layer = ConvolutionalLayer(layer_config['filter_shape'],
+                                           layer_config['num_filters'],
+                                           layer_config['stride'], layer_config['mode'],
+                                           prev_layer,
+                                           activation=get_activation(layer_config['activation']),
+                                           learning_rate=layer_config['learning_rate'],
+                                           flatten=is_next_layer_dense)
+
+            # else dense layer
+            else:
+                layer = DenseLayer(layer_config['size'],
+                                   prev_layer,
+                                   activation=get_activation(layer_config['activation']),
+                                   learning_rate=layer_config['learning_rate'],
+                                   wreg=self.wreg,
+                                   wrt=self.wrt if self.wrt is not None else None)
             layers.append(layer)
             prev_layer = layer
 
-        # add output layer
+        """ add output layer """
         output_config = layers_config[-1]
         if output_config['activation'] == 'softmax':
             linear_layer = DenseLayer(output_config['size'],
@@ -59,6 +87,8 @@ class Network:
                                       wrt=self.wrt if self.wrt is not None else None)
             layers.append(output_layer)
 
+        for layer in layers:
+            print(layer.type)
         return layers
 
 
@@ -123,6 +153,15 @@ class Network:
                     progress.print_epoch(epoch + 1)
 
         return loss_history_train, loss_history_val
+
+
+    def visualize_kernels(self):
+        """
+        Visualizes kernels for all conolutional layers, if any.
+        """
+        for layer in self.network:
+            if layer.type == 'conv':
+                plot_kernel(layer.weights)
 
 
 def get_loss(loss):

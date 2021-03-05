@@ -10,8 +10,12 @@ class DenseLayer:
         self.learning_rate = learning_rate
         self.wreg = wreg
         self.wrt = wrt
+        self.present_inputs = None
         self.present_outputs = None
-        self.weights = self.initialize_weights(prev_layer.size) if prev_layer.type != 'conv' else None
+        if prev_layer.type != 'conv':
+            self.weights = self.initialize_weights(prev_layer.size)
+        else:
+            self.weights = None
         self.biases = self.initialize_biases()
 
     # initialize weights from a uniform distribution between -0.1 and 0.1
@@ -24,10 +28,13 @@ class DenseLayer:
 
 
     def forward_pass(self, input_batch):
+        self.present_inputs = input_batch
+
         if self.prev_layer.type == 'conv' and self.weights is None:
-            # flat input
-            size = 0
-            self.initialize_weights(0)
+            # input should be flat
+            # print('kkk', input_batch.shape)
+            prev_size = input_batch.shape[1]
+            self.weights = self.initialize_weights(prev_size)
 
         # apply activation function if supplied, else just pass the incoming values on
         weighted_sum = np.dot(input_batch, self.weights) + self.biases
@@ -45,7 +52,7 @@ class DenseLayer:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.jacobian_Z_sum(self.present_outputs)
 
         # calculate the gradients of the loss with regards to weights and biases
-        y_outputs = self.prev_layer.present_outputs
+        y_outputs = self.present_inputs
         jacobian_Z_W = self.jacobian_Z_W(y_outputs, jacobian_Z_sum_diag_flattened)
         jacobian_Z_B = self.jacobian_Z_B(np.full((len(y_outputs), 1), 1), jacobian_Z_sum_diag_flattened)
 
