@@ -4,19 +4,21 @@ import math
 
 
 class ImageGenerator:
-    def __init__(self, size, centered=False, noise_rate=0.1):
+    def __init__(self, size, two_dim=True, centered=False, noise_rate=0.1):
         self.size = size
+        self.two_dimensions = two_dim
         self.centered = centered
         self.noise_rate = noise_rate
+        self.counter = 0
 
-        # 0 = horizontal bars, 1 = vertical bars, 2 = cross, 3 = rectangle
+        # 0 = horizontal bars, 1 = vertical bars, 2 = cross, 3 = rectangle (if two dimensions)
         self.next_image_type = 0
 
 
     def generate_image_sets(self, number_of_images, share_train=0.7, share_validate=0.1, flatten=False):
         images = []
         for i in range(number_of_images):
-            image = self.generate_image(flatten)
+            image = self.generate_2d_image(flatten) if self.two_dimensions else self.generate_1d_image()
             target = one_hot_encoder(self.next_image_type)
             images.append((image, target))
             self.next_image_type = (self.next_image_type + 1) % 4
@@ -25,7 +27,34 @@ class ImageGenerator:
         return split_data_set(images, share_train, share_validate)
 
 
-    def generate_image(self, flatten):
+    def generate_1d_image(self):
+        self.counter += 1
+        image = np.zeros(self.size)
+        image_type = self.next_image_type + 1
+        pos_bit_prob = 2 * (image_type + 1) / (self.size - 2)
+        pos_bits_indexes = []
+        for i in range(0, self.size, 2):
+            if random.random() < pos_bit_prob:
+                pos_bits_indexes.append(i)
+            if len(pos_bits_indexes) == image_type:
+                break
+        if len(pos_bits_indexes) < image_type:
+            return self.generate_1d_image()
+
+        for i in range(len(pos_bits_indexes)):
+            if i == len(pos_bits_indexes) - 1:
+                possible_pos_seg_len = max(self.size - pos_bits_indexes[i] - 2, 0)
+            else:
+                possible_pos_seg_len = max(pos_bits_indexes[i + 1] - pos_bits_indexes[i] - 2, 0)
+            pos_seg_len = random.randint(0, possible_pos_seg_len)
+
+            for j in range(pos_seg_len + 1):
+                image_index = pos_bits_indexes[i]
+                image[image_index + j] = 1
+        return image
+
+
+    def generate_2d_image(self, flatten):
         if self.next_image_type == 0:
             return self.draw_horizontal_bars(flatten)
 

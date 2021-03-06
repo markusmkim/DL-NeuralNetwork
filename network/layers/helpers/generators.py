@@ -28,6 +28,10 @@ def generate_maps(input_map, kernel, stride, mode):
         pad_row = ceil(((len(kernel)) + ((steps_row - 1) * stride) - input_map.shape[0]) / 2)
         pad_col = ceil(((len(kernel)) + ((steps_col - 1) * stride) - input_map.shape[1]) / 2)
 
+        if kernel.shape[0] == 1:
+            # data and conv layer is one dimensonal
+            pad_row = 0
+
         padding_size = ((pad_row, pad_row), (pad_col, pad_col))     # specify zero-padding dimensions
         padded_map = apply_padding(input_map, padding_size)         # pad input map
 

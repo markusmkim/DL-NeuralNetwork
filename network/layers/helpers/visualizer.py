@@ -35,6 +35,8 @@ def hinton(matrix, max_weight=None, ax=None):
     ax.yaxis.set_major_locator(plt.NullLocator())
 
     for (x, y), w in np.ndenumerate(matrix):
+        if matrix.shape[0] == 1:
+            x, y = y, x
         color = 'white' if w > 0 else 'black'
         size = np.sqrt(abs(w) / max_weight)
         rect = plt.Rectangle([x - size / 2, y - size / 2], size, size,

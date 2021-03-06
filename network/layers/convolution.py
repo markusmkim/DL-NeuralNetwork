@@ -4,10 +4,10 @@ from network.layers.helpers.generators import generate_maps
 
 class ConvolutionalLayer:
     def __init__(self, filter_shape, num_filters, stride, mode, prev_layer,
-                 flatten=False, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
+                 flatten_data=False, flatten_channels=False,  activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
         self.type = 'conv'
-        self.flatten = flatten
-
+        self.flatten_data = flatten_data
+        self.flatten_channels = flatten_channels
         self.filter_shape = filter_shape
         self.num_filters = num_filters
         self.stride = stride
@@ -78,10 +78,18 @@ class ConvolutionalLayer:
         output_batch = np.array(output_batch)
         self.present_outputs = output_batch
 
-        if self.flatten:
-            # assume 2d image dimensions are equal (image-ratio = 1:1)
+        if self.flatten_data:
+            if self.flatten_channels:
+                # assume 2d image dimensions are equal (image-ratio = 1:1)
+                output_batch = output_batch.reshape((output_batch.shape[0],
+                                                     output_batch.shape[1] * output_batch.shape[2]**2))
+            else:
+                output_batch = output_batch.reshape((output_batch.shape[0],
+                                                     output_batch.shape[1], 1,
+                                                     output_batch.shape[2]**2))
+        elif self.flatten_channels:
             output_batch = output_batch.reshape((output_batch.shape[0],
-                                                 output_batch.shape[1] * output_batch.shape[2]**2))
+                                                 output_batch.shape[1] * output_batch.shape[2] * output_batch.shape[3]))
 
         return output_batch
 
@@ -101,9 +109,12 @@ class ConvolutionalLayer:
                 # weights_affecting_input = []
                 for kernel_row_index in range(kernel.shape[0]):
                     for kernel_col_index in range(kernel.shape[1]):
-
                         weight = kernel[kernel_row_index][kernel_col_index]
-                        map_entry = padded_map[pad_row_index + kernel_row_index][pad_col_index + kernel_col_index]
+                        map_entry = 0
+                        map_entry_row = pad_row_index + kernel_row_index
+                        map_entry_col = pad_col_index + kernel_col_index
+                        if map_entry_row < padded_map.shape[0] and map_entry_col < padded_map.shape[1]:
+                            map_entry = padded_map[map_entry_row][map_entry_col]
                         weighted_sum += weight * map_entry
 
                         # if map_entry != 0: DENNE er farlig
@@ -137,7 +148,7 @@ class ConvolutionalLayer:
 
 
     def backward_pass(self, jacobian_L_Z):
-        if self.flatten:
+        if self.flatten_data or self.flatten_channels:
             # assume 2d image dimensions are equal (image-ratio = 1:1)
             jacobian_L_Z = jacobian_L_Z.reshape(self.present_outputs.shape)
 

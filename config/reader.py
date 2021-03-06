@@ -40,6 +40,7 @@ class ConfigReader:
             """ output layer """
             if key == 'o':
                 layer = {
+                    'type': 'output',
                     'size': int(params[0]),
                     'activation': params[1],
                     'learning_rate': float(params[2])

@@ -3,12 +3,14 @@ from generator.generator import ImageGenerator
 from generator.visualizer import visualize_image
 
 
-generator = ImageGenerator(30, centered=False, noise_rate=0.02)
+generator = ImageGenerator(20, two_dim=False)
 
-images_train, _, _ = generator.generate_image_sets(12, flatten=False, share_train=1, share_validate=0)
+images_train, _, _ = generator.generate_image_sets(1000, flatten=False, share_train=1, share_validate=0)
 
-
+all_images = []
 for image, target in images_train:
-    print(target)
-    # visualize_image(image)
-    # sleep(0.2)
+    all_images.append(image)
+
+
+visualize_image(all_images[:20])
+print(generator.counter)

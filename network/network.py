@@ -28,41 +28,55 @@ class Network:
         """ add input layer """
         input_config = layers_config[0]
         input_layer = ConvInputLayer(1) if input_config['type'] == 'conv' else InputLayer(input_config['size'])
-        # input_layer = ConvInputLayer(1)
         layers.append(input_layer)
-
-        # conv_layer = ConvolutionalLayer((3, 3), 3, 1, 'same', input_layer, activation=Sigmoid)
-        # layers.append(conv_layer)
-
-        # conv_layer_2 = ConvolutionalLayer((3, 3), 5, 1, 'valid', conv_layer, activation=Sigmoid, flatten=True)
-        # layers.append(conv_layer_2)
 
         """ add hidden layers """
         prev_layer = input_layer
-        # prev_layer = conv_layer_2
         for i in range(1, len(layers_config) - 1):
             layer_config = layers_config[i]
+            next_layer_config = layers_config[i + 1]
 
             # if convolutional layer
             if layer_config['type'] == 'conv':
-                is_next_layer_dense = layers_config[i + 1]['type'] == 'dense'
-                print(is_next_layer_dense)
+                """
+                is_layer_1d_conv = layer_config['filter_shape'][0] == 1
+                is_next_layer_dense = next_layer_config['type'] == 'dense'
+                is_next_layer_1d_conv = False
+                if not is_next_layer_dense:
+                    if next_layer_config['filter_shape'][0] == 1:
+                        is_next_layer_1d_conv = True
+                flat_data = False
+                if not is_layer_1d_conv:
+                    flat_data = is_next_layer_dense or is_next_layer_1d_conv
+                """
+                is_layer_1d_conv = layer_config['filter_shape'][0] == 1
+                is_next_layer_dense = next_layer_config['type'] == 'dense'
+                is_next_layer_output = next_layer_config['type'] == 'output'
+                is_next_layer_1d_conv = not (is_next_layer_dense or is_next_layer_output) and \
+                                        next_layer_config['filter_shape'][0] == 1
+                # if not is_next_layer_dense:
+                #    if next_layer_config['filter_shape'][0] == 1:
+                #        is_next_layer_1d_conv = True
+                flat_data = not is_layer_1d_conv and (is_next_layer_dense or is_next_layer_1d_conv)
                 layer = ConvolutionalLayer(layer_config['filter_shape'],
                                            layer_config['num_filters'],
                                            layer_config['stride'], layer_config['mode'],
                                            prev_layer,
                                            activation=get_activation(layer_config['activation']),
                                            learning_rate=layer_config['learning_rate'],
-                                           flatten=is_next_layer_dense)
+                                           flatten_data=flat_data,
+                                           flatten_channels=is_next_layer_dense or is_next_layer_output)
 
             # else dense layer
             else:
+                is_next_layer_conv = next_layer_config['type'] == 'conv'
                 layer = DenseLayer(layer_config['size'],
                                    prev_layer,
                                    activation=get_activation(layer_config['activation']),
                                    learning_rate=layer_config['learning_rate'],
                                    wreg=self.wreg,
-                                   wrt=self.wrt if self.wrt is not None else None)
+                                   wrt=self.wrt if self.wrt is not None else None,
+                                   wrap_output=is_next_layer_conv)
             layers.append(layer)
             prev_layer = layer
 
@@ -87,8 +101,6 @@ class Network:
                                       wrt=self.wrt if self.wrt is not None else None)
             layers.append(output_layer)
 
-        for layer in layers:
-            print(layer.type)
         return layers
 
 
@@ -183,5 +195,3 @@ def get_activation(act):
         return TanH
     # else linear
     return None
-
-

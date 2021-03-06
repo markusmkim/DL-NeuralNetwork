@@ -1,8 +1,9 @@
 import numpy as np
+from network.layers.utils import reshape_to_4d
 
 
 class DenseLayer:
-    def __init__(self, size, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
+    def __init__(self, size, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001, wrap_output=False):
         self.type = 'dense'
         self.size = size
         self.prev_layer = prev_layer
@@ -10,6 +11,8 @@ class DenseLayer:
         self.learning_rate = learning_rate
         self.wreg = wreg
         self.wrt = wrt
+        self.wrap_output = wrap_output
+        self.num_filters = 1  # used by next layer if it is a convolutional layer
         self.present_inputs = None
         self.present_outputs = None
         if prev_layer.type != 'conv':
@@ -41,10 +44,17 @@ class DenseLayer:
         output_batch = self.activation.apply(weighted_sum) if self.activation else weighted_sum
 
         self.present_outputs = output_batch
+
+        if self.wrap_output:
+            output_batch = reshape_to_4d(output_batch)
+
         return output_batch
 
 
     def backward_pass(self, jacobian_L_Z):
+        if self.wrap_output:
+            jacobian_L_Z = jacobian_L_Z.reshape(self.present_outputs.shape)
+
         # calculate the jacobian of Z with regard to the input sum
         if self.activation:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.activation.derivative(self.present_outputs)
