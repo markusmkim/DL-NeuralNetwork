@@ -38,26 +38,14 @@ class Network:
 
             # if convolutional layer
             if layer_config['type'] == 'conv':
-                """
-                is_layer_1d_conv = layer_config['filter_shape'][0] == 1
-                is_next_layer_dense = next_layer_config['type'] == 'dense'
-                is_next_layer_1d_conv = False
-                if not is_next_layer_dense:
-                    if next_layer_config['filter_shape'][0] == 1:
-                        is_next_layer_1d_conv = True
-                flat_data = False
-                if not is_layer_1d_conv:
-                    flat_data = is_next_layer_dense or is_next_layer_1d_conv
-                """
                 is_layer_1d_conv = layer_config['filter_shape'][0] == 1
                 is_next_layer_dense = next_layer_config['type'] == 'dense'
                 is_next_layer_output = next_layer_config['type'] == 'output'
                 is_next_layer_1d_conv = not (is_next_layer_dense or is_next_layer_output) and \
                                         next_layer_config['filter_shape'][0] == 1
-                # if not is_next_layer_dense:
-                #    if next_layer_config['filter_shape'][0] == 1:
-                #        is_next_layer_1d_conv = True
+
                 flat_data = not is_layer_1d_conv and (is_next_layer_dense or is_next_layer_1d_conv)
+
                 layer = ConvolutionalLayer(layer_config['filter_shape'],
                                            layer_config['num_filters'],
                                            layer_config['stride'], layer_config['mode'],
