@@ -249,7 +249,7 @@ class ConvolutionalLayer:
     def update_weights(self, jacobian_L_W):
         gradients = jacobian_L_W
         # apply regularization if specified
-        # gradients = self.regulate_gradients(gradients)
+        gradients = self.regulate_gradients(gradients)
 
         # gradients summed over the entire batch
         summed_gradients = np.sum(gradients, axis=0)

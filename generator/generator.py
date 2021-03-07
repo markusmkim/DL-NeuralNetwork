@@ -9,7 +9,6 @@ class ImageGenerator:
         self.two_dimensions = two_dim
         self.centered = centered
         self.noise_rate = noise_rate
-        self.counter = 0
 
         # 0 = horizontal bars, 1 = vertical bars, 2 = cross, 3 = rectangle (if two dimensions)
         self.next_image_type = 0
@@ -28,7 +27,6 @@ class ImageGenerator:
 
 
     def generate_1d_image(self):
-        self.counter += 1
         image = np.zeros(self.size)
         image_type = self.next_image_type + 1
         pos_bit_prob = 2 * (image_type + 1) / (self.size - 2)

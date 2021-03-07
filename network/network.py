@@ -52,6 +52,8 @@ class Network:
                                            prev_layer,
                                            activation=get_activation(layer_config['activation']),
                                            learning_rate=layer_config['learning_rate'],
+                                           wreg=self.wreg,
+                                           wrt=self.wrt if self.wrt is not None else None,
                                            flatten_data=flat_data,
                                            flatten_channels=is_next_layer_dense or is_next_layer_output)
 

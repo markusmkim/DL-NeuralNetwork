@@ -13,7 +13,7 @@ path_config_conv_2d = 'config/conv_2d.ini'
 path_config_conv_2d1d = 'config/conv_2d1d.ini'
 path_config_conv_1d = 'config/conv_1d.ini'
 path_config_conv_custom = 'config/conv_custom.ini'
-config_reader = ConfigReader(filepath=path_config_conv_2d)
+config_reader = ConfigReader(filepath=path_config_conv_custom)
 config = config_reader.get_data()
 print('\nConfiguration summary:\n----------------------')
 print_config(config)

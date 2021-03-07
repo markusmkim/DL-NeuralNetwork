@@ -7,14 +7,18 @@ def plot_kernel(kernels):
     title = 'Kernels: ' + str(kernels.shape[1]) + ' input channels, ' + str(kernels.shape[0]) + ' output channels'
     fig.suptitle(title)
 
-    for output_map_index in range(kernels.shape[0]):
-        if len(axs.shape) > 1:
-            for input_map_index in range(kernels.shape[1]):
-                kernel = kernels[output_map_index][input_map_index]
-                hinton(kernel, ax=axs[input_map_index, output_map_index])
-        else:
-            kernel = kernels[output_map_index][0]
-            hinton(kernel, ax=axs[output_map_index])
+    if kernels.shape[0] > 1:
+        for output_map_index in range(kernels.shape[0]):
+            if len(axs.shape) > 1:
+                for input_map_index in range(kernels.shape[1]):
+                    kernel = kernels[output_map_index][input_map_index]
+                    hinton(kernel, ax=axs[input_map_index, output_map_index])
+            else:
+                kernel = kernels[output_map_index][0]
+                hinton(kernel, ax=axs[output_map_index])
+
+    else:
+        hinton(kernels[0][0])
 
     fig.show()
 
