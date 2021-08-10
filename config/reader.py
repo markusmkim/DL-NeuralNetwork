@@ -28,7 +28,7 @@ class ConfigReader:
         for key in self.config['LAYERS']:
             params = str(self.config['LAYERS'][key]).split(' - ')
 
-            """ input layer """
+            # INPUT LAYER #
             if key == 'i':
                 layer = {
                     'type': params[0],
@@ -37,7 +37,7 @@ class ConfigReader:
                 layers.append(layer)
                 continue
 
-            """ output layer """
+            # OUTPUT LAYER #
             if key == 'o':
                 layer = {
                     'type': 'output',
@@ -48,8 +48,9 @@ class ConfigReader:
                 layers.append(layer)
                 continue
 
-            """ hidden layers """
+            # HIDDEN LAYERS #
             layer_type = params[0]
+
             # convolutional layers
             if layer_type == 'conv':
                 kernel_dimensions = [int(dimension) for dimension in params[1][1:-1].split(',')]
