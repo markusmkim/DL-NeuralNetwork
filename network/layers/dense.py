@@ -1,21 +1,29 @@
 import numpy as np
+from network.layers.utils import reshape_to_4d
 
 
 class DenseLayer:
-    def __init__(self, size, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001):
+    def __init__(self, size, prev_layer, activation=None, learning_rate=0.1, wreg=None, wrt=0.001, wrap_output=False):
+        self.type = 'dense'
         self.size = size
         self.prev_layer = prev_layer
         self.activation = activation
         self.learning_rate = learning_rate
         self.wreg = wreg
         self.wrt = wrt
+        self.wrap_output = wrap_output
+        self.num_filters = 1  # used by next layer if it is a convolutional layer
+        self.present_inputs = None
         self.present_outputs = None
-        self.weights = self.initialize_weights()
+        if prev_layer.type != 'conv':
+            self.weights = self.initialize_weights(prev_layer.size)
+        else:
+            self.weights = None
         self.biases = self.initialize_biases()
 
     # initialize weights from a uniform distribution between -0.1 and 0.1
-    def initialize_weights(self):
-        return (np.random.rand(self.prev_layer.size, self.size) / 5) - 0.1
+    def initialize_weights(self, prev_size):
+        return (np.random.rand(prev_size, self.size) / 5) - 0.1
 
     # initialize biases from a uniform distribution between -0.1 and 0.1
     def initialize_biases(self):
@@ -23,15 +31,30 @@ class DenseLayer:
 
 
     def forward_pass(self, input_batch):
+        self.present_inputs = input_batch
+
+        if self.prev_layer.type == 'conv' and self.weights is None:
+            # input should be flat
+            # print('kkk', input_batch.shape)
+            prev_size = input_batch.shape[1]
+            self.weights = self.initialize_weights(prev_size)
+
         # apply activation function if supplied, else just pass the incoming values on
         weighted_sum = np.dot(input_batch, self.weights) + self.biases
         output_batch = self.activation.apply(weighted_sum) if self.activation else weighted_sum
 
         self.present_outputs = output_batch
+
+        if self.wrap_output:
+            output_batch = reshape_to_4d(output_batch)
+
         return output_batch
 
 
     def backward_pass(self, jacobian_L_Z):
+        if self.wrap_output:
+            jacobian_L_Z = jacobian_L_Z.reshape(self.present_outputs.shape)
+
         # calculate the jacobian of Z with regard to the input sum
         if self.activation:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.activation.derivative(self.present_outputs)
@@ -39,7 +62,7 @@ class DenseLayer:
             jacobian_Z_sum_diag_flattened, jacobian_Z_sum = self.jacobian_Z_sum(self.present_outputs)
 
         # calculate the gradients of the loss with regards to weights and biases
-        y_outputs = self.prev_layer.present_outputs
+        y_outputs = self.present_inputs
         jacobian_Z_W = self.jacobian_Z_W(y_outputs, jacobian_Z_sum_diag_flattened)
         jacobian_Z_B = self.jacobian_Z_B(np.full((len(y_outputs), 1), 1), jacobian_Z_sum_diag_flattened)
 

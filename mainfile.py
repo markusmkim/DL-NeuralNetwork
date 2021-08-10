@@ -9,7 +9,11 @@ from network.loss.visualizer import plot_loss_per_minibatch
 # --- READ CONFIGURATIONS --- #
 path_config_demo = 'config/config_demo.ini'
 path_config_custom = 'config/config_custom.ini'
-config_reader = ConfigReader(filepath=path_config_custom)
+path_config_conv_2d = 'config/conv_2d.ini'
+path_config_conv_2d1d = 'config/conv_2d1d.ini'
+path_config_conv_1d = 'config/conv_1d.ini'
+path_config_conv_custom = 'config/conv_custom.ini'
+config_reader = ConfigReader(filepath=path_config_conv_custom)
 config = config_reader.get_data()
 print('\nConfiguration summary:\n----------------------')
 print_config(config)
@@ -17,6 +21,7 @@ print_config(config)
 
 # --- GENERATE IMAGE DATASET --- #
 image_generator = ImageGenerator(size=config['image_size'],
+                                 two_dim=config['two_dimensional'],
                                  centered=config['centered'],
                                  noise_rate=config['noise_rate'])
 print('\nGenerating images...')
@@ -44,6 +49,10 @@ train_loss_history, val_loss_history = model.fit(train_set, train_targets,
                                                  batch_size=config['batch_size'],
                                                  epochs=config['epochs'],
                                                  verbose=config['verbose'])
+
+# visualize kernels if any
+model.visualize_kernels()
+
 # test model
 print('Done training. Testing...')
 test_loss_history, _ = model.predict(test_set, test_targets)
