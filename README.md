@@ -1,4 +1,4 @@
-# A deep general purpose neural network built from scratch
+# A general purpose neural network built from scratch
 ### with the use of Python and NumPy only
 #### The following features are included:
 - Two types of layers: 
@@ -21,7 +21,7 @@ The figure below shows some examples
 
 Horizontal edges | Vertical edges | Cross | Rectangle
 ------------ | ------------- | ------------- | -------------
-![hor](/data/examples/fig-0.png) | ![ver](/data/examples/fig-1.png) | ![cross](/data/examples/fig-2.png) | ![rect](/data/examples/fig-3.png)
+![hor0](/data/examples/fig-0.png) ![hor1](/data/examples/fig-4.png)  | ![ver0](/data/examples/fig-1.png) ![ver1](/data/examples/fig-5.png) | ![cross0](/data/examples/fig-2.png) ![cross1](/data/examples/fig-6.png) | ![rect0](/data/examples/fig-3.png) ![rect1](/data/examples/fig-7.png)
 
 ### Configuration
 ...
