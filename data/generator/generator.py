@@ -1,6 +1,6 @@
 import numpy as np
 import random
-import math
+from utils import split_data_set, split_into_data_and_targets, one_hot_encoder
 
 
 class ImageGenerator:
@@ -18,7 +18,7 @@ class ImageGenerator:
         images = []
         for i in range(number_of_images):
             image = self.generate_2d_image(flatten) if self.two_dimensions else self.generate_1d_image()
-            target = one_hot_encoder(self.next_image_type)
+            target = one_hot_encoder(self.next_image_type, 4)
             images.append((image, target))
             self.next_image_type = (self.next_image_type + 1) % 4
 
@@ -137,24 +137,3 @@ class ImageGenerator:
         y_radius = random.randint(image_center // 4, image_center - abs(image_center - obj_center_y_co) - 1)
 
         return (obj_center_x_co, obj_center_y_co), x_radius, y_radius
-
-
-def split_data_set(data, share_train, share_validate):
-    train_size = math.floor(len(data)*share_train)
-    val_size = len(data) - train_size if share_train + share_validate == 1 else math.floor(len(data)*share_validate)
-    train = data[:train_size]
-    val = data[train_size: train_size + val_size]
-    test = data[train_size + val_size:]
-    return train, val, test
-
-
-def one_hot_encoder(target):
-    encoded_target = np.zeros(4)
-    # target is index
-    encoded_target[target] = 1
-    return encoded_target
-
-
-
-
-

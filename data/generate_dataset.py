@@ -1,7 +1,7 @@
 from time import sleep
-from generator.generator import ImageGenerator
-from generator.utils import split_into_data_and_targets
-from generator.visualizer import visualize_image
+from data.generator.generator import ImageGenerator
+from data.generator.utils import split_into_data_and_targets
+from data.generator.visualizer import visualize_image
 
 
 def generate_images(config, visualize=False):
