@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from utils import split_data_set, split_into_data_and_targets, one_hot_encoder
+from data.generator.utils import split_data_set, one_hot_encoder
 
 
 class ImageGenerator:

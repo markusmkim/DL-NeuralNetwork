@@ -1,10 +1,10 @@
 from time import sleep
 from data.generator.generator import ImageGenerator
 from data.generator.utils import split_into_data_and_targets
-from data.generator.visualizer import visualize_image
+from data.generator.utils import visualize_image, save_image
 
 
-def generate_images(config, visualize=False):
+def generate_dataset(config, visualize=False, save_examples=False):
     """
     Use this function to generate images with the image generator
     """
@@ -28,6 +28,10 @@ def generate_images(config, visualize=False):
         for image, _ in images_train:
             visualize_image(image)
             sleep(0.2)
+
+    if save_examples:
+        for i in range(8):  # save 8 first images as examples
+            save_image(images_train[i][0], f'data/examples/fig-{i}.png')
 
     # SPLIT DATA INTO FEATURES AND TARGETS #
     train_data, train_targets = split_into_data_and_targets(images_train)

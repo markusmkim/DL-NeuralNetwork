@@ -2,7 +2,7 @@ from config.reader import ConfigReader
 from config.utils import print_config
 from network.network import Network
 from network.loss.visualizer import plot_loss_per_minibatch
-from generate_images import generate_images
+from data.generate_dataset import generate_dataset
 
 
 # READ CONFIGURATION
@@ -13,7 +13,7 @@ print_config(config)
 
 
 # DATA
-(train_data, train_targets), (val_data, val_targets), (test_data, test_targets) = generate_images(config)
+(train_data, train_targets), (val_data, val_targets), (test_data, test_targets) = generate_dataset(config, save_examples=True)
 
 
 # build model
@@ -37,5 +37,5 @@ test_loss_history, _ = model.predict(test_data, test_targets)
 print('Done testing. Testing error:', test_loss_history[0])
 
 # visualize learning
-plot_loss_per_minibatch(config['loss'], train_loss_history, val_loss_history, test_loss_history)
+plot_loss_per_minibatch(config['loss'], train_loss_history, val_loss_history, test_loss_history, save_fig=True)
 
