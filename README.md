@@ -54,7 +54,7 @@ They are visualized as Hinton diagrams [1], where
 - Negative values are represented by black squares
 - The size of the square represents the magnitude of the value
 
-![kernel1](/data/result/kernels-layer-1.png) ![kernel2](/data/result/kernels-layer-2.png)
+![kernel1](/data/result/kernels-layer-1.png) | ![kernel2](/data/result/kernels-layer-2.png)
 
 
 ## References
