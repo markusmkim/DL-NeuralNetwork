@@ -48,7 +48,14 @@ only to showcase the loss on the test set after training, the length of the line
 ![loss](/data/result/fig-loss.png)
 
 
+Sometimes it could be interesting to visualize the kernels in the convolutional layers as well.
+The figures below shows the resulting kernels after training, for the two convolutional layers.
+They are visualized as Hinton diagrams [1], where
+- Positive values are represented by white squares
+- Negative values are represented by black squares
+- The size of the square represents the magnitude of the value
 
+![kernel1](/data/result/kernels-layer-1.png) ![kernel2](/data/result/kernels-layer-2.png)
 
 
 ## References
