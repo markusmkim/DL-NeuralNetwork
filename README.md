@@ -1,5 +1,5 @@
 # A general purpose neural network built from scratch
-### with the use of Python and NumPy only
+### with the use of Python and NumPy only:heavy_exclamation_mark:
 #### The following features are included:
 - Two types of layers: 
   - **Dense**: Any number of layers - any number of neurons in each layer
@@ -14,8 +14,7 @@
 
 
 ## Performance
-The system was tested on image classification
-### Dataset
+The system was tested on image classification.
 The dataset was generated from the image generator.
 It consisted of 2000 images (16x16 pixels) divided into 4 different classes (Horizontal edges, vertical edges, crosse and rectangle).
 The dataset was split as follows:
@@ -31,10 +30,10 @@ Horizontal edges | Vertical edges | Cross | Rectangle
 
 ### Configuration
 The following network structure was used:
-- 1st layer: Convolutional (kernel shape = (3,3), num kernels = 2, stride = 1, mode = same, activation = tanh, l-rate = 0.01)
-- 2nd layer: Convolutional (kernel shape = (3,3), num kernels = 3, stride = 1, mode = valid, activation = tanh, l-rate = 0.01)
-- 3rd layer: Dense (100 neurons, activation = relu, l-rate = 0.01)
-- 4th layer: Dense (4 neurons, activation = softmax, l-rate = 0.001)
+- 1st layer: Convolutional (kernel-shape=(3,3), num-kernels=2, stride=1, mode=same, activation=tanh, l-rate=0.01)
+- 2nd layer: Convolutional (kernel-shape=(3,3), num-kernels=3, stride=1, mode=valid, activation=tanh, l-rate=0.01)
+- 3rd layer: Dense (100 neurons, activation=relu, l-rate=0.01)
+- 4th layer: Dense (4 neurons, activation=softmax, l-rate=0.001)
 
 The following learning parameters was used:
 - Loss function: Cross entropy
