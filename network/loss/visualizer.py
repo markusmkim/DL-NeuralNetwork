@@ -22,7 +22,7 @@ def plot_loss_per_minibatch(loss, train_errors, validate_errors, test_errors, sa
     plt.title(title)
     plt.legend(fontsize="large")
     if save_fig:
-        plt.savefig('data/examples/fig-loss', bbox_inches='tight')
+        plt.savefig('data/result/fig-loss', bbox_inches='tight')
     plt.show()
 
 

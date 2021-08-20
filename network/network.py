@@ -157,13 +157,13 @@ class Network:
         return loss_history_train, loss_history_val
 
 
-    def visualize_kernels(self):
+    def visualize_kernels(self, save_fig=False):
         """
-        Visualizes kernels for all conolutional layers, if any.
+        Visualizes kernels for all convolutional layers, if any.
         """
-        for layer in self.network:
+        for index, layer in enumerate(self.network):
             if layer.type == 'conv':
-                plot_kernel(layer.weights)
+                plot_kernel(layer.weights, index, save_kernel_image=save_fig)
 
 
 def get_loss(loss):

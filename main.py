@@ -29,7 +29,7 @@ train_loss_history, val_loss_history = model.fit(train_data, train_targets,
                                                  verbose=config['verbose'])
 
 # visualize kernels if any
-model.visualize_kernels()
+model.visualize_kernels(save_fig=True)
 
 # test model
 print('Done training. Testing...')

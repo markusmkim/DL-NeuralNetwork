@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plot_kernel(kernels):
+def plot_kernel(kernels, layer_index, save_kernel_image=False):
     fig, axs = plt.subplots(kernels.shape[1], kernels.shape[0])
-    title = 'Kernels: ' + str(kernels.shape[1]) + ' input channels, ' + str(kernels.shape[0]) + ' output channels'
+    title = 'Kernels layer ' + str(layer_index) + ': ' + str(kernels.shape[1]) + ' input channels, ' + str(kernels.shape[0]) + ' output channels'
     fig.suptitle(title)
 
     if kernels.shape[0] > 1:
@@ -19,6 +19,9 @@ def plot_kernel(kernels):
 
     else:
         hinton(kernels[0][0])
+
+    if save_kernel_image:
+        plt.savefig(f'data/result/kernels-layer-{layer_index}', bbox_inches='tight')
 
     fig.show()
 
